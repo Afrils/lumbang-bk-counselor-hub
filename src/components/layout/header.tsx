@@ -11,12 +11,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/hooks/use-auth"
 
 interface HeaderProps {
   onMenuClick: () => void
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
+  const { user, profile, signOut } = useAuth()
+  
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
       <div className="flex h-16 items-center px-4 gap-4">
@@ -86,9 +89,9 @@ export function Header({ onMenuClick }: HeaderProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">Guru BK</p>
+                  <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
                   <p className="text-xs text-muted-foreground">
-                    guru.bk@sman1lumbang.sch.id
+                    {user?.email}
                   </p>
                 </div>
               </div>
@@ -102,7 +105,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 Dashboard
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive" onClick={() => signOut()}>
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
