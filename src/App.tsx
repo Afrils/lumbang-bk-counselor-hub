@@ -8,6 +8,8 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import Index from "./pages/Index";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import Students from "./pages/Students";
+import Materials from "./pages/Materials";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +44,22 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Index />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/students" 
+                element={
+                  <ProtectedRoute>
+                    <Students />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/materials" 
+                element={
+                  <ProtectedRoute>
+                    <Materials />
                   </ProtectedRoute>
                 } 
               />

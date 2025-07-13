@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Link, useLocation } from "react-router-dom"
 import {
   Home,
   Users,
@@ -28,46 +29,48 @@ const navigation = [
   {
     title: "Dashboard",
     items: [
-      { name: "Beranda", href: "#", icon: Home, current: true },
-      { name: "Analytics", href: "#", icon: BarChart3, current: false },
+      { name: "Beranda", href: "/dashboard", icon: Home, current: false },
+      { name: "Analytics", href: "/analytics", icon: BarChart3, current: false },
     ]
   },
   {
     title: "Manajemen",
     items: [
-      { name: "Data Siswa", href: "#", icon: Users, current: false },
-      { name: "Absensi", href: "#", icon: UserCheck, current: false },
-      { name: "Jadwal", href: "#", icon: Calendar, current: false },
+      { name: "Data Siswa", href: "/students", icon: Users, current: false },
+      { name: "Absensi", href: "/attendance", icon: UserCheck, current: false },
+      { name: "Jadwal", href: "/schedule", icon: Calendar, current: false },
     ]
   },
   {
     title: "Konseling",
     items: [
-      { name: "Konseling Individu", href: "#", icon: MessageCircle, current: false },
-      { name: "Konseling Kelompok", href: "#", icon: Users, current: false },
-      { name: "Bimbingan Belajar", href: "#", icon: BookOpen, current: false },
-      { name: "Minat & Bakat", href: "#", icon: Heart, current: false },
-      { name: "Bimbingan Karir", href: "#", icon: Briefcase, current: false },
-      { name: "Pelaporan Masalah", href: "#", icon: AlertTriangle, current: false },
+      { name: "Konseling Individu", href: "/counseling/individual", icon: MessageCircle, current: false },
+      { name: "Konseling Kelompok", href: "/counseling/group", icon: Users, current: false },
+      { name: "Bimbingan Belajar", href: "/counseling/academic", icon: BookOpen, current: false },
+      { name: "Minat & Bakat", href: "/counseling/talent", icon: Heart, current: false },
+      { name: "Bimbingan Karir", href: "/counseling/career", icon: Briefcase, current: false },
+      { name: "Pelaporan Masalah", href: "/counseling/reports", icon: AlertTriangle, current: false },
     ]
   },
   {
     title: "Dokumen",
     items: [
-      { name: "Materi BK", href: "#", icon: FileText, current: false },
-      { name: "Angket", href: "#", icon: ClipboardList, current: false },
-      { name: "RPL BK", href: "#", icon: Target, current: false },
+      { name: "Materi BK", href: "/materials", icon: FileText, current: false },
+      { name: "Angket", href: "/surveys", icon: ClipboardList, current: false },
+      { name: "RPL BK", href: "/lesson-plans", icon: Target, current: false },
     ]
   },
   {
     title: "Sistem",
     items: [
-      { name: "Pengaturan", href: "#", icon: Settings, current: false },
+      { name: "Pengaturan", href: "/settings", icon: Settings, current: false },
     ]
   }
 ]
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const location = useLocation()
+  
   return (
     <>
       {/* Overlay */}
@@ -101,28 +104,32 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   {group.title}
                 </h3>
                 <nav className="space-y-1">
-                  {group.items.map((item) => (
-                    <a
-                      key={item.name}
-                      href={item.href}
-                      className={cn(
-                        "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                        item.current
-                          ? "bg-gradient-primary text-primary-foreground shadow-soft"
-                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                      )}
-                    >
-                      <item.icon
+                  {group.items.map((item) => {
+                    const isActive = location.pathname === item.href
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        onClick={onClose}
                         className={cn(
-                          "mr-3 h-4 w-4 flex-shrink-0 transition-colors",
-                          item.current
-                            ? "text-primary-foreground"
-                            : "text-muted-foreground group-hover:text-accent-foreground"
+                          "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-gradient-primary text-primary-foreground shadow-soft"
+                            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                         )}
-                      />
-                      {item.name}
-                    </a>
-                  ))}
+                      >
+                        <item.icon
+                          className={cn(
+                            "mr-3 h-4 w-4 flex-shrink-0 transition-colors",
+                            isActive
+                              ? "text-primary-foreground"
+                              : "text-muted-foreground group-hover:text-accent-foreground"
+                          )}
+                        />
+                        {item.name}
+                      </Link>
+                    )
+                  })}
                 </nav>
               </div>
             ))}

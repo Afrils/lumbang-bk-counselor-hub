@@ -239,6 +239,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      set_admin_role_for_email: {
+        Args: { _email: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "guru_bk" | "siswa"
