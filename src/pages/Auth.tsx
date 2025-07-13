@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
@@ -7,16 +8,30 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { GraduationCap } from 'lucide-react'
+import { GraduationCap, Eye, EyeOff } from 'lucide-react'
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false)
-  const { signIn, signUp, user } = useAuth()
+  const [showPassword, setShowPassword] = useState(false)
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false)
+  const { signIn, signUp, user, loading } = useAuth()
   const navigate = useNavigate()
+
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Memuat...</p>
+        </div>
+      </div>
+    )
+  }
 
   // Redirect if already logged in
   if (user) {
-    navigate('/')
+    navigate('/dashboard')
     return null
   }
 
@@ -28,10 +43,15 @@ export default function Auth() {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
+    if (!email || !password) {
+      setIsLoading(false)
+      return
+    }
+
     const { error } = await signIn(email, password)
     
     if (!error) {
-      navigate('/')
+      navigate('/dashboard')
     }
     
     setIsLoading(false)
@@ -45,14 +65,21 @@ export default function Auth() {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
     const fullName = formData.get('fullName') as string
-    const role = formData.get('role') as string
+    const role = formData.get('role') as string || 'siswa'
+
+    if (!email || !password || !fullName) {
+      setIsLoading(false)
+      return
+    }
+
+    if (password.length < 6) {
+      setIsLoading(false)
+      return
+    }
 
     const { error } = await signUp(email, password, fullName, role)
     
-    if (!error) {
-      // Will show toast about email confirmation
-    }
-    
+    // Don't redirect after signup - user needs to confirm email first
     setIsLoading(false)
   }
 
@@ -88,17 +115,34 @@ export default function Auth() {
                     type="email"
                     placeholder="your@email.com"
                     required
+                    autoComplete="email"
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Password</Label>
-                  <Input
-                    id="signin-password"
-                    name="password"
-                    type="password"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signin-password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      autoComplete="current-password"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={isLoading}>
@@ -117,6 +161,7 @@ export default function Auth() {
                     type="text"
                     placeholder="Nama lengkap Anda"
                     required
+                    autoComplete="name"
                   />
                 </div>
                 
@@ -128,18 +173,36 @@ export default function Auth() {
                     type="email"
                     placeholder="your@email.com"
                     required
+                    autoComplete="email"
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    name="password"
-                    type="password"
-                    placeholder="Minimal 6 karakter"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      name="password"
+                      type={showSignUpPassword ? "text" : "password"}
+                      placeholder="Minimal 6 karakter"
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                    >
+                      {showSignUpPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
