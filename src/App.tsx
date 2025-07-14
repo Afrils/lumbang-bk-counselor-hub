@@ -11,6 +11,18 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Students from "./pages/Students";
 import Materials from "./pages/Materials";
+import Analytics from "./pages/Analytics";
+import Attendance from "./pages/Attendance";
+import Schedule from "./pages/Schedule";
+import Individual from "./pages/counseling/Individual";
+import Group from "./pages/counseling/Group";
+import Academic from "./pages/counseling/Academic";
+import Talent from "./pages/counseling/Talent";
+import Career from "./pages/counseling/Career";
+import Reports from "./pages/counseling/Reports";
+import Surveys from "./pages/Surveys";
+import LessonPlans from "./pages/LessonPlans";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -81,6 +93,102 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Materials />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/analytics" 
+                element={
+                  <ProtectedRoute>
+                    <Analytics />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/attendance" 
+                element={
+                  <ProtectedRoute>
+                    <Attendance />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/schedule" 
+                element={
+                  <ProtectedRoute>
+                    <Schedule />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/counseling/individual" 
+                element={
+                  <ProtectedRoute>
+                    <Individual />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/counseling/group" 
+                element={
+                  <ProtectedRoute>
+                    <Group />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/counseling/academic" 
+                element={
+                  <ProtectedRoute>
+                    <Academic />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/counseling/talent" 
+                element={
+                  <ProtectedRoute>
+                    <Talent />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/counseling/career" 
+                element={
+                  <ProtectedRoute>
+                    <Career />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/counseling/reports" 
+                element={
+                  <ProtectedRoute>
+                    <Reports />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/surveys" 
+                element={
+                  <ProtectedRoute>
+                    <Surveys />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/lesson-plans" 
+                element={
+                  <ProtectedRoute>
+                    <LessonPlans />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <Settings />
                   </ProtectedRoute>
                 } 
               />
