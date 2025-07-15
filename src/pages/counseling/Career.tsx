@@ -1,10 +1,11 @@
+
 import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Briefcase, GraduationCap, TrendingUp, Target, Plus, Search, Filter } from "lucide-react"
+import { Briefcase, GraduationCap, TrendingUp, Target, Plus, Search, Filter, Eye, UserPlus } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/hooks/use-toast"
 
 const mockCareerPrograms = [
   {
@@ -73,6 +75,10 @@ export default function Career() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedProgram, setSelectedProgram] = useState<any>(null)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
+  const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false)
+  const { toast } = useToast()
 
   const filteredPrograms = mockCareerPrograms.filter(program => {
     const matchesSearch = program.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,6 +86,32 @@ export default function Career() {
     const matchesStatus = statusFilter === "all" || program.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  const handleCreateProgram = () => {
+    toast({
+      title: "Program Berhasil Dibuat",
+      description: "Program bimbingan karir baru telah berhasil dibuat.",
+    })
+    setIsDialogOpen(false)
+  }
+
+  const handleViewDetail = (program: any) => {
+    setSelectedProgram(program)
+    setIsDetailDialogOpen(true)
+  }
+
+  const handleNewSession = (program: any) => {
+    setSelectedProgram(program)
+    setIsSessionDialogOpen(true)
+  }
+
+  const handleCreateSession = () => {
+    toast({
+      title: "Sesi Baru Dijadwalkan",
+      description: `Sesi mentoring baru untuk ${selectedProgram?.student} telah dijadwalkan.`,
+    })
+    setIsSessionDialogOpen(false)
+  }
 
   return (
     <DashboardLayout>
@@ -149,7 +181,7 @@ export default function Career() {
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Batal
                 </Button>
-                <Button onClick={() => setIsDialogOpen(false)}>
+                <Button onClick={handleCreateProgram}>
                   Buat Program
                 </Button>
               </div>
@@ -291,10 +323,21 @@ export default function Career() {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleViewDetail(program)}
+                    >
+                      <Eye className="mr-1 h-3 w-3" />
                       Detail
                     </Button>
-                    <Button size="sm" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleNewSession(program)}
+                    >
+                      <UserPlus className="mr-1 h-3 w-3" />
                       Sesi Baru
                     </Button>
                   </div>
@@ -314,6 +357,115 @@ export default function Career() {
             </CardContent>
           </Card>
         )}
+
+        {/* Detail Dialog */}
+        <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Detail Program Bimbingan Karir</DialogTitle>
+              <DialogDescription>
+                Informasi lengkap program bimbingan karir untuk {selectedProgram?.student}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedProgram && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Siswa</Label>
+                    <p>{selectedProgram.student}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Kelas</Label>
+                    <p>{selectedProgram.class}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Tujuan Karir</Label>
+                  <p>{selectedProgram.careerGoal}</p>
+                </div>
+                <div>
+                  <Label className="font-semibold">Progress Saat Ini</Label>
+                  <div className="mt-2">
+                    <Progress value={selectedProgram.currentProgress} className="h-2" />
+                    <p className="text-sm text-muted-foreground mt-1">{selectedProgram.currentProgress}% tercapai</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Minat</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedProgram.interests.map((interest: string, index: number) => (
+                      <Badge key={index} variant="secondary">{interest}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Keterampilan</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedProgram.skills.map((skill: string, index: number) => (
+                      <Badge key={index} variant="outline">{skill}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Rekomendasi Jurusan</Label>
+                  <p>{selectedProgram.recommendations.join(", ")}</p>
+                </div>
+                <div>
+                  <Label className="font-semibold">Total Sesi Mentoring</Label>
+                  <p>{selectedProgram.mentoring_sessions} sesi telah dilakukan</p>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* New Session Dialog */}
+        <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Jadwalkan Sesi Mentoring Baru</DialogTitle>
+              <DialogDescription>
+                Buat jadwal sesi mentoring untuk {selectedProgram?.student}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="date">Tanggal</Label>
+                <Input type="date" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="time">Waktu</Label>
+                <Input type="time" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="topic">Topik Sesi</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih topik" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="assessment">Assessment Minat & Bakat</SelectItem>
+                    <SelectItem value="planning">Perencanaan Karir</SelectItem>
+                    <SelectItem value="skills">Pengembangan Keterampilan</SelectItem>
+                    <SelectItem value="preparation">Persiapan Kuliah/Kerja</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="notes">Catatan</Label>
+                <Textarea placeholder="Catatan atau agenda khusus untuk sesi ini..." />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsSessionDialogOpen(false)}>
+                Batal
+              </Button>
+              <Button onClick={handleCreateSession}>
+                Jadwalkan Sesi
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )

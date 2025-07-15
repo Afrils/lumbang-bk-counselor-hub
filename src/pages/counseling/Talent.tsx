@@ -1,10 +1,11 @@
+
 import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Heart, Star, Music, Palette, Trophy, Plus, Search, Filter } from "lucide-react"
+import { Heart, Star, Music, Palette, Trophy, Plus, Search, Filter, Eye, UserPlus } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useToast } from "@/hooks/use-toast"
 
 const mockTalentAssessments = [
   {
@@ -76,6 +78,10 @@ export default function Talent() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedAssessment, setSelectedAssessment] = useState<any>(null)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
+  const [isProgramDialogOpen, setIsProgramDialogOpen] = useState(false)
+  const { toast } = useToast()
 
   const filteredAssessments = mockTalentAssessments.filter(assessment => {
     const matchesSearch = assessment.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -83,6 +89,32 @@ export default function Talent() {
     const matchesStatus = statusFilter === "all" || assessment.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  const handleCreateAssessment = () => {
+    toast({
+      title: "Assessment Berhasil Dibuat",
+      description: "Assessment minat & bakat baru telah berhasil dijadwalkan.",
+    })
+    setIsDialogOpen(false)
+  }
+
+  const handleViewDetail = (assessment: any) => {
+    setSelectedAssessment(assessment)
+    setIsDetailDialogOpen(true)
+  }
+
+  const handleCreateProgram = (assessment: any) => {
+    setSelectedAssessment(assessment)
+    setIsProgramDialogOpen(true)
+  }
+
+  const handleCreateDevelopmentProgram = () => {
+    toast({
+      title: "Program Pengembangan Dibuat",
+      description: `Program pengembangan bakat untuk ${selectedAssessment?.student} telah berhasil dibuat.`,
+    })
+    setIsProgramDialogOpen(false)
+  }
 
   return (
     <DashboardLayout>
@@ -166,7 +198,7 @@ export default function Talent() {
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Batal
                 </Button>
-                <Button onClick={() => setIsDialogOpen(false)}>
+                <Button onClick={handleCreateAssessment}>
                   Buat Assessment
                 </Button>
               </div>
@@ -298,11 +330,22 @@ export default function Talent() {
                   )}
 
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleViewDetail(assessment)}
+                    >
+                      <Eye className="mr-1 h-3 w-3" />
                       Detail
                     </Button>
                     {assessment.status === 'completed' && (
-                      <Button size="sm" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleCreateProgram(assessment)}
+                      >
+                        <UserPlus className="mr-1 h-3 w-3" />
                         Program Lanjutan
                       </Button>
                     )}
@@ -323,6 +366,128 @@ export default function Talent() {
             </CardContent>
           </Card>
         )}
+
+        {/* Detail Dialog */}
+        <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Detail Assessment Minat & Bakat</DialogTitle>
+              <DialogDescription>
+                Hasil assessment untuk {selectedAssessment?.student}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedAssessment && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Siswa</Label>
+                    <p>{selectedAssessment.student}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Kelas</Label>
+                    <p>{selectedAssessment.class}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Tanggal Assessment</Label>
+                  <p>{new Date(selectedAssessment.assessment_date).toLocaleDateString('id-ID')}</p>
+                </div>
+                <div>
+                  <Label className="font-semibold">Bakat yang Teridentifikasi</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedAssessment.talents.map((talent: string, index: number) => (
+                      <Badge key={index} variant="secondary">{talent}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Area Minat</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedAssessment.interests.map((interest: string, index: number) => (
+                      <Badge key={index} variant="outline">{interest}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Status Assessment</Label>
+                  <Badge className={statusColors[selectedAssessment.status as keyof typeof statusColors]}>
+                    {selectedAssessment.status === 'completed' ? 'Selesai' : 
+                     selectedAssessment.status === 'in_progress' ? 'Berlangsung' : 'Terjadwal'}
+                  </Badge>
+                </div>
+                {selectedAssessment.status === 'completed' && (
+                  <div>
+                    <Label className="font-semibold">Rekomendasi Pengembangan</Label>
+                    <p className="text-sm bg-muted p-3 rounded-lg mt-1">{selectedAssessment.recommendations}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Program Development Dialog */}
+        <Dialog open={isProgramDialogOpen} onOpenChange={setIsProgramDialogOpen}>
+          <DialogContent className="sm:max-w-[525px]">
+            <DialogHeader>
+              <DialogTitle>Program Pengembangan Bakat</DialogTitle>
+              <DialogDescription>
+                Buat program pengembangan khusus untuk {selectedAssessment?.student}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="focus">Fokus Pengembangan</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih fokus utama" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="academic">Pengembangan Akademik</SelectItem>
+                    <SelectItem value="artistic">Pengembangan Seni</SelectItem>
+                    <SelectItem value="athletic">Pengembangan Olahraga</SelectItem>
+                    <SelectItem value="leadership">Pengembangan Kepemimpinan</SelectItem>
+                    <SelectItem value="technical">Pengembangan Teknologi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="duration">Durasi Program</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih durasi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1month">1 Bulan</SelectItem>
+                    <SelectItem value="3months">3 Bulan</SelectItem>
+                    <SelectItem value="6months">6 Bulan</SelectItem>
+                    <SelectItem value="1year">1 Tahun</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="activities">Aktivitas yang Direncanakan</Label>
+                <Textarea placeholder="Jelaskan aktivitas dan kegiatan yang akan dilakukan..." />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="goals">Target & Tujuan</Label>
+                <Textarea placeholder="Jelaskan target yang ingin dicapai dalam program ini..." />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="resources">Sumber Daya yang Diperlukan</Label>
+                <Textarea placeholder="Fasilitas, alat, mentor, atau dukungan lain yang diperlukan..." />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsProgramDialogOpen(false)}>
+                Batal
+              </Button>
+              <Button onClick={handleCreateDevelopmentProgram}>
+                Buat Program
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )

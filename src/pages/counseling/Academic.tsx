@@ -1,10 +1,11 @@
+
 import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { BookOpen, TrendingUp, TrendingDown, AlertCircle, Plus, Search, Filter } from "lucide-react"
+import { BookOpen, TrendingUp, TrendingDown, AlertCircle, Plus, Search, Filter, Eye, UserPlus } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/hooks/use-toast"
 
 const mockStudentPrograms = [
   {
@@ -73,6 +75,10 @@ export default function Academic() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedProgram, setSelectedProgram] = useState<any>(null)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
+  const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false)
+  const { toast } = useToast()
 
   const filteredPrograms = mockStudentPrograms.filter(program => {
     const matchesSearch = program.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,6 +86,32 @@ export default function Academic() {
     const matchesStatus = statusFilter === "all" || program.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  const handleCreateProgram = () => {
+    toast({
+      title: "Program Berhasil Dibuat",
+      description: "Program bimbingan belajar baru telah berhasil dibuat.",
+    })
+    setIsDialogOpen(false)
+  }
+
+  const handleViewDetail = (program: any) => {
+    setSelectedProgram(program)
+    setIsDetailDialogOpen(true)
+  }
+
+  const handleNewSession = (program: any) => {
+    setSelectedProgram(program)
+    setIsSessionDialogOpen(true)
+  }
+
+  const handleCreateSession = () => {
+    toast({
+      title: "Sesi Baru Dijadwalkan",
+      description: `Sesi bimbingan ${selectedProgram?.subject} untuk ${selectedProgram?.student} telah dijadwalkan.`,
+    })
+    setIsSessionDialogOpen(false)
+  }
 
   return (
     <DashboardLayout>
@@ -158,7 +190,7 @@ export default function Academic() {
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Batal
                 </Button>
-                <Button onClick={() => setIsDialogOpen(false)}>
+                <Button onClick={handleCreateProgram}>
                   Buat Program
                 </Button>
               </div>
@@ -275,10 +307,21 @@ export default function Academic() {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleViewDetail(program)}
+                    >
+                      <Eye className="mr-1 h-3 w-3" />
                       Detail
                     </Button>
-                    <Button size="sm" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleNewSession(program)}
+                    >
+                      <UserPlus className="mr-1 h-3 w-3" />
                       Sesi Baru
                     </Button>
                   </div>
@@ -298,6 +341,112 @@ export default function Academic() {
             </CardContent>
           </Card>
         )}
+
+        {/* Detail Dialog */}
+        <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Detail Program Bimbingan Belajar</DialogTitle>
+              <DialogDescription>
+                Informasi lengkap program bimbingan untuk {selectedProgram?.student}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedProgram && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Siswa</Label>
+                    <p>{selectedProgram.student}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Kelas</Label>
+                    <p>{selectedProgram.class}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Mata Pelajaran</Label>
+                  <p>{selectedProgram.subject}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Nilai Saat Ini</Label>
+                    <p className="text-2xl font-bold">{selectedProgram.currentGrade}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Target Nilai</Label>
+                    <p className="text-2xl font-bold">{selectedProgram.targetGrade}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Progress Pembelajaran</Label>
+                  <div className="mt-2">
+                    <Progress value={selectedProgram.progress} className="h-2" />
+                    <p className="text-sm text-muted-foreground mt-1">{selectedProgram.progress}% tercapai</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Peningkatan Nilai</Label>
+                  <p className="text-lg font-semibold text-green-600">{selectedProgram.improvement} poin</p>
+                </div>
+                <div>
+                  <Label className="font-semibold">Total Sesi Bimbingan</Label>
+                  <p>{selectedProgram.sessions} sesi telah dilakukan</p>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* New Session Dialog */}
+        <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Jadwalkan Sesi Bimbingan Baru</DialogTitle>
+              <DialogDescription>
+                Buat jadwal sesi bimbingan {selectedProgram?.subject} untuk {selectedProgram?.student}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="date">Tanggal</Label>
+                <Input type="date" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="time">Waktu</Label>
+                <Input type="time" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="topic">Topik Pembelajaran</Label>
+                <Input placeholder="Contoh: Persamaan Linear, Trigonometri..." />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="method">Metode Bimbingan</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih metode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="individual">Individual</SelectItem>
+                    <SelectItem value="group">Kelompok Kecil</SelectItem>
+                    <SelectItem value="peer">Peer Tutoring</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="materials">Materi yang Diperlukan</Label>
+                <Textarea placeholder="Daftar buku, alat, atau materi lain yang diperlukan..." />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsSessionDialogOpen(false)}>
+                Batal
+              </Button>
+              <Button onClick={handleCreateSession}>
+                Jadwalkan Sesi
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )

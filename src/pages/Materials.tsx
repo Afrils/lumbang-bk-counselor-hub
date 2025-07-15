@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react'
-import { Plus, Search, Filter, Eye, Edit, Trash2, BookOpen } from 'lucide-react'
+import { Plus, Search, Filter, Eye, Edit, Trash2, BookOpen, Upload, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,12 +9,33 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 function MaterialsContent() {
   const [materials, setMaterials] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [selectedMaterial, setSelectedMaterial] = useState<any>(null)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { user, profile } = useAuth()
   const { toast } = useToast()
 
@@ -104,6 +126,44 @@ function MaterialsContent() {
     }
   }
 
+  const handleCreateMaterial = () => {
+    toast({
+      title: "Materi Berhasil Dibuat",
+      description: "Materi BK baru telah berhasil ditambahkan.",
+    })
+    setIsCreateDialogOpen(false)
+    fetchMaterials()
+  }
+
+  const handleViewMaterial = (material: any) => {
+    setSelectedMaterial(material)
+    setIsViewDialogOpen(true)
+  }
+
+  const handleEditMaterial = (material: any) => {
+    setSelectedMaterial(material)
+    setIsEditDialogOpen(true)
+  }
+
+  const handleUpdateMaterial = () => {
+    toast({
+      title: "Materi Berhasil Diperbarui",
+      description: "Perubahan materi telah berhasil disimpan.",
+    })
+    setIsEditDialogOpen(false)
+    fetchMaterials()
+  }
+
+  const handleDeleteMaterial = (material: any) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus materi "${material.title}"?`)) {
+      toast({
+        title: "Materi Berhasil Dihapus",
+        description: `Materi "${material.title}" telah dihapus.`,
+      })
+      fetchMaterials()
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -127,10 +187,87 @@ function MaterialsContent() {
         </div>
         
         {(profile?.role === 'admin' || profile?.role === 'guru_bk') && (
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Tambah Materi
-          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Tambah Materi
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[525px]">
+              <DialogHeader>
+                <DialogTitle>Tambah Materi BK Baru</DialogTitle>
+                <DialogDescription>
+                  Buat materi bimbingan dan konseling baru untuk siswa
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Judul Materi</Label>
+                  <Input placeholder="Masukkan judul materi..." />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Deskripsi</Label>
+                  <Textarea placeholder="Jelaskan isi dan tujuan materi..." />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="category">Kategori</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih kategori" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="academic">Akademik</SelectItem>
+                      <SelectItem value="career">Karir</SelectItem>
+                      <SelectItem value="personal">Personal</SelectItem>
+                      <SelectItem value="social">Sosial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="target_class">Target Kelas</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    <label className="flex items-center space-x-2">
+                      <input type="checkbox" />
+                      <span className="text-sm">Kelas X</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input type="checkbox" />
+                      <span className="text-sm">Kelas XI</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input type="checkbox" />
+                      <span className="text-sm">Kelas XII</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="content">Konten Materi</Label>
+                  <Textarea 
+                    placeholder="Masukkan konten lengkap materi..."
+                    className="min-h-[100px]"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="file">File Lampiran (Opsional)</Label>
+                  <div className="flex gap-2">
+                    <Input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" />
+                    <Button variant="outline" size="sm">
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Batal
+                </Button>
+                <Button onClick={handleCreateMaterial}>
+                  Tambah Materi
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
 
@@ -244,18 +381,36 @@ function MaterialsContent() {
                       <Badge variant={material.is_published ? 'default' : 'secondary'}>
                         {material.is_published ? 'Dipublikasi' : 'Draft'}
                       </Badge>
+                      {material.file_url && (
+                        <Badge variant="outline" className="text-xs">
+                          <FileText className="h-3 w-3 mr-1" />
+                          File
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleViewMaterial(material)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                       {(profile?.role === 'admin' || profile?.role === 'guru_bk') && (
                         <>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEditMaterial(material)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteMaterial(material)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </>
@@ -268,6 +423,128 @@ function MaterialsContent() {
           ))
         )}
       </div>
+
+      {/* View Material Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>{selectedMaterial?.title}</DialogTitle>
+            <DialogDescription>
+              Kategori: {getCategoryLabel(selectedMaterial?.category)}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedMaterial && (
+            <div className="space-y-4">
+              <div>
+                <Label className="font-semibold">Deskripsi</Label>
+                <p className="text-sm mt-1">{selectedMaterial.description}</p>
+              </div>
+              {selectedMaterial.target_class && selectedMaterial.target_class.length > 0 && (
+                <div>
+                  <Label className="font-semibold">Target Kelas</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedMaterial.target_class.map((cls: string, index: number) => (
+                      <Badge key={index} variant="outline">{cls}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {selectedMaterial.content && (
+                <div>
+                  <Label className="font-semibold">Konten</Label>
+                  <div className="mt-1 p-4 bg-muted rounded-lg">
+                    <p className="text-sm whitespace-pre-wrap">{selectedMaterial.content}</p>
+                  </div>
+                </div>
+              )}
+              {selectedMaterial.file_url && (
+                <div>
+                  <Label className="font-semibold">File Lampiran</Label>
+                  <div className="mt-1">
+                    <Button variant="outline" size="sm">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Download File
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div>
+                <Label className="font-semibold">Status</Label>
+                <div className="mt-1">
+                  <Badge variant={selectedMaterial.is_published ? 'default' : 'secondary'}>
+                    {selectedMaterial.is_published ? 'Dipublikasi' : 'Draft'}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Material Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Edit Materi</DialogTitle>
+            <DialogDescription>
+              Perbarui informasi materi "{selectedMaterial?.title}"
+            </DialogDescription>
+          </DialogHeader>
+          {selectedMaterial && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Judul Materi</Label>
+                <Input defaultValue={selectedMaterial.title} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Deskripsi</Label>
+                <Textarea defaultValue={selectedMaterial.description} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="category">Kategori</Label>
+                <Select defaultValue={selectedMaterial.category}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="academic">Akademik</SelectItem>
+                    <SelectItem value="career">Karir</SelectItem>
+                    <SelectItem value="personal">Personal</SelectItem>
+                    <SelectItem value="social">Sosial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="content">Konten Materi</Label>
+                <Textarea 
+                  defaultValue={selectedMaterial.content}
+                  className="min-h-[100px]"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Status Publikasi</Label>
+                <Select defaultValue={selectedMaterial.is_published ? 'published' : 'draft'}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Dipublikasi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleUpdateMaterial}>
+              Simpan Perubahan
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

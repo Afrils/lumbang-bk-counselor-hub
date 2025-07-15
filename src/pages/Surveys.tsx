@@ -1,10 +1,11 @@
+
 import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { ClipboardList, Eye, Users, BarChart3, Plus, Search, Filter } from "lucide-react"
+import { ClipboardList, Eye, Users, BarChart3, Plus, Search, Filter, Edit } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/hooks/use-toast"
 
 const mockSurveys = [
   {
@@ -97,12 +99,41 @@ export default function Surveys() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedSurvey, setSelectedSurvey] = useState<any>(null)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isResultsDialogOpen, setIsResultsDialogOpen] = useState(false)
+  const { toast } = useToast()
 
   const filteredSurveys = mockSurveys.filter(survey => {
     const matchesSearch = survey.title.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || survey.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  const handleCreateSurvey = () => {
+    toast({
+      title: "Angket Berhasil Dibuat",
+      description: "Angket baru telah berhasil dibuat dan siap untuk dipublikasi.",
+    })
+    setIsDialogOpen(false)
+  }
+
+  const handleViewSurvey = (survey: any) => {
+    setSelectedSurvey(survey)
+    setIsViewDialogOpen(true)
+  }
+
+  const handleViewResults = (survey: any) => {
+    setSelectedSurvey(survey)
+    setIsResultsDialogOpen(true)
+  }
+
+  const handleEditSurvey = (survey: any) => {
+    toast({
+      title: "Membuka Editor",
+      description: `Editor untuk "${survey.title}" akan segera dibuka.`,
+    })
+  }
 
   return (
     <DashboardLayout>
@@ -197,7 +228,7 @@ export default function Surveys() {
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Batal
                 </Button>
-                <Button onClick={() => setIsDialogOpen(false)}>
+                <Button onClick={handleCreateSurvey}>
                   Buat Angket
                 </Button>
               </div>
@@ -328,18 +359,32 @@ export default function Surveys() {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleViewSurvey(survey)}
+                    >
                       <Eye className="mr-1 h-3 w-3" />
                       Lihat
                     </Button>
                     {survey.status === 'active' && (
-                      <Button size="sm" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleViewResults(survey)}
+                      >
                         <BarChart3 className="mr-1 h-3 w-3" />
                         Hasil
                       </Button>
                     )}
                     {survey.status === 'draft' && (
-                      <Button size="sm" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleEditSurvey(survey)}
+                      >
+                        <Edit className="mr-1 h-3 w-3" />
                         Edit
                       </Button>
                     )}
@@ -360,6 +405,140 @@ export default function Surveys() {
             </CardContent>
           </Card>
         )}
+
+        {/* View Survey Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Detail Angket</DialogTitle>
+              <DialogDescription>
+                Informasi lengkap tentang "{selectedSurvey?.title}"
+              </DialogDescription>
+            </DialogHeader>
+            {selectedSurvey && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="font-semibold">Judul</Label>
+                  <p>{selectedSurvey.title}</p>
+                </div>
+                <div>
+                  <Label className="font-semibold">Deskripsi</Label>
+                  <p className="text-sm">{selectedSurvey.description}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Jenis Angket</Label>
+                    <Badge className={typeColors[selectedSurvey.type as keyof typeof typeColors]}>
+                      {selectedSurvey.type === 'satisfaction' ? 'Kepuasan' : 
+                       selectedSurvey.type === 'assessment' ? 'Assessment' : 
+                       selectedSurvey.type === 'problem_identification' ? 'Identifikasi' : 'Karir'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Status</Label>
+                    <Badge className={statusColors[selectedSurvey.status as keyof typeof statusColors]}>
+                      {selectedSurvey.status === 'draft' ? 'Draft' : 
+                       selectedSurvey.status === 'active' ? 'Aktif' : 
+                       selectedSurvey.status === 'completed' ? 'Selesai' : 'Ditutup'}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Target Kelas</Label>
+                  <p>{selectedSurvey.target_class.join(", ")}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Tanggal Dibuat</Label>
+                    <p>{new Date(selectedSurvey.created_date).toLocaleDateString('id-ID')}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Tanggal Berakhir</Label>
+                    <p>{new Date(selectedSurvey.end_date).toLocaleDateString('id-ID')}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Progress Respons</Label>
+                  <div className="mt-2">
+                    <Progress value={(selectedSurvey.responses / selectedSurvey.total_target) * 100} className="h-2" />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedSurvey.responses} dari {selectedSurvey.total_target} respons ({Math.round((selectedSurvey.responses / selectedSurvey.total_target) * 100)}%)
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold">Jumlah Pertanyaan</Label>
+                  <p>{selectedSurvey.questions_count} pertanyaan</p>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Results Dialog */}
+        <Dialog open={isResultsDialogOpen} onOpenChange={setIsResultsDialogOpen}>
+          <DialogContent className="sm:max-w-[800px]">
+            <DialogHeader>
+              <DialogTitle>Hasil Survey: {selectedSurvey?.title}</DialogTitle>
+              <DialogDescription>
+                Analisis hasil dari {selectedSurvey?.responses} respons
+              </DialogDescription>
+            </DialogHeader>
+            {selectedSurvey && (
+              <div className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Total Respons</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{selectedSurvey.responses}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Tingkat Partisipasi</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {Math.round((selectedSurvey.responses / selectedSurvey.total_target) * 100)}%
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Rata-rata Kepuasan</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">4.2/5</div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-3">Ringkasan Hasil</h4>
+                  <div className="space-y-3">
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm">
+                        <strong>Temuan Utama:</strong> Sebagian besar responden (78%) merasa puas dengan layanan BK yang diberikan.
+                      </p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm">
+                        <strong>Area Perbaikan:</strong> Perlu peningkatan dalam hal ketersediaan waktu konsultasi dan variasi program.
+                      </p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm">
+                        <strong>Rekomendasi:</strong> Menambah slot waktu konsultasi dan mengembangkan program bimbingan kelompok.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )
