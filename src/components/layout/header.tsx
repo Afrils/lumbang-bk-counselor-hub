@@ -1,17 +1,19 @@
-import { GraduationCap, Menu, Search, Bell, User } from "lucide-react"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { Menu, User, LogOut, Settings, HelpCircle } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
+import { useNavigate } from "react-router-dom"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/hooks/use-auth"
+import { HelpDialog } from "@/components/ui/help-dialog"
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -19,94 +21,95 @@ interface HeaderProps {
 
 export function Header({ onMenuClick }: HeaderProps) {
   const { user, profile, signOut } = useAuth()
-  
+  const navigate = useNavigate()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      navigate('/auth')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-      <div className="flex h-16 items-center px-4 gap-4">
-        {/* Mobile Menu Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="lg:hidden"
-          onClick={onMenuClick}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-            <GraduationCap className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div className="hidden sm:block">
-            <h1 className="text-lg font-bold text-foreground">BK SMAN 1 Lumbang</h1>
-            <p className="text-xs text-muted-foreground">Bimbingan Konseling</p>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="flex-1 max-w-md mx-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Cari siswa, materi, atau konseling..."
-              className="pl-9 bg-muted/50 border-border/50 focus:bg-background"
-            />
-          </div>
-        </div>
-
-        {/* Right Actions */}
-        <div className="flex items-center gap-2">
-          {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="h-4 w-4" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-destructive">
-              3
-            </Badge>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-16 items-center justify-between px-6">
+        {/* Left side */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMenuClick}
+            className="lg:hidden"
+          >
+            <Menu className="h-5 w-5" />
           </Button>
+          
+          <div className="hidden lg:block">
+            <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Sistem BK Digital
+            </h1>
+          </div>
+        </div>
 
-          {/* Theme Toggle */}
-          <ThemeToggle />
+        {/* Right side */}
+        <div className="flex items-center gap-2">
+          {/* Help Button */}
+          <HelpDialog>
+            <Button variant="ghost" size="sm">
+              <HelpCircle className="h-4 w-4" />
+            </Button>
+          </HelpDialog>
 
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    <User className="h-4 w-4" />
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || ""} />
+                  <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                    {profile?.full_name ? getInitials(profile.full_name) : <User className="h-4 w-4" />}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
-              <div className="flex items-center gap-2 p-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    <User className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium leading-none">
+                    {profile?.full_name || 'User'}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}
                   </p>
+                  <p className="text-xs leading-none text-muted-foreground capitalize">
+                    {profile?.role || 'siswa'}
+                  </p>
                 </div>
-              </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profil
+              <DropdownMenuItem onClick={() => navigate('/settings')}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Pengaturan</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <GraduationCap className="mr-2 h-4 w-4" />
-                Dashboard
+              <DropdownMenuItem onClick={() => navigate('/features')}>
+                <HelpCircle className="mr-2 h-4 w-4" />
+                <span>Bantuan & Panduan</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onClick={() => signOut()}>
-                Logout
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Keluar</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

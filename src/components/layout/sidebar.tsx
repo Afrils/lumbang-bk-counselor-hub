@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -17,7 +18,9 @@ import {
   Target,
   Briefcase,
   AlertTriangle,
-  X
+  X,
+  HelpCircle,
+  Lightbulb
 } from "lucide-react"
 
 interface SidebarProps {
@@ -63,6 +66,7 @@ const navigation = [
   {
     title: "Sistem",
     items: [
+      { name: "Fitur & Panduan", href: "/features", icon: HelpCircle, current: false },
       { name: "Pengaturan", href: "/settings", icon: Settings, current: false },
     ]
   }

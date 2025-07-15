@@ -23,6 +23,7 @@ import Reports from "./pages/counseling/Reports";
 import Surveys from "./pages/Surveys";
 import LessonPlans from "./pages/LessonPlans";
 import Settings from "./pages/Settings";
+import Features from "./pages/Features";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -189,6 +190,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Settings />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/features" 
+                element={
+                  <ProtectedRoute>
+                    <Features />
                   </ProtectedRoute>
                 } 
               />
