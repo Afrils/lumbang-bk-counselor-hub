@@ -207,7 +207,7 @@ export function HelpDialog({ children }: HelpDialogProps) {
                 <CardContent className="space-y-3">
                   <div>
                     <h4 className="font-semibold text-sm">Q: Bagaimana cara reset password?</h4>
-                    <p className="text-sm text-muted-foreground">A: Klik "Lupa Password" di halaman login dan ikuti instruksi email</p>
+                    <p className="text-sm text-muted-foreground">A: Klik &quot;Lupa Password&quot; di halaman login dan ikuti instruksi email</p>
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm">Q: Data siswa tidak muncul?</h4>
@@ -215,7 +215,7 @@ export function HelpDialog({ children }: HelpDialogProps) {
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm">Q: Cara menghubungi support?</h4>
-                    <p className="text-sm text-muted-foreground">A: Gunakan menu "Pengaturan" > "Bantuan & Support"</p>
+                    <p className="text-sm text-muted-foreground">A: Gunakan menu &quot;Pengaturan&quot; &gt; &quot;Bantuan & Support&quot;</p>
                   </div>
                 </CardContent>
               </Card>
