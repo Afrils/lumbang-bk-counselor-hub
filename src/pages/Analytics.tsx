@@ -1,17 +1,99 @@
+import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart3, TrendingUp, Users, Calendar, PieChart, LineChart, Activity } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { BarChart3, TrendingUp, Users, Calendar, PieChart, LineChart, Activity, Download, Filter } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useToast } from "@/hooks/use-toast"
 
 export default function Analytics() {
+  const [selectedPeriod, setSelectedPeriod] = useState("semester")
+  const [selectedClass, setSelectedClass] = useState("all")
+  const { toast } = useToast()
+
+  const handleExportReport = () => {
+    const reportData = {
+      period: selectedPeriod,
+      class: selectedClass,
+      generated_at: new Date().toISOString(),
+      data: {
+        total_students: 1247,
+        counseling_sessions: 342,
+        satisfaction_rate: 94.2,
+        resolved_cases: 89
+      }
+    }
+
+    const jsonString = JSON.stringify(reportData, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `laporan_analytics_${selectedPeriod}_${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    toast({
+      title: "Berhasil",
+      description: "Laporan analytics berhasil diexport"
+    })
+  }
+
+  const handleGenerateDetailedReport = () => {
+    toast({
+      title: "Laporan Sedang Dibuat",
+      description: "Laporan detail sedang diproses dan akan tersedia dalam beberapa menit"
+    })
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics & Laporan</h1>
-          <p className="text-muted-foreground">
-            Data dan analisis komprehensif program bimbingan konseling
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Analytics & Laporan</h1>
+            <p className="text-muted-foreground">
+              Data dan analisis komprehensif program bimbingan konseling
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bulanan">Bulanan</SelectItem>
+                <SelectItem value="semester">Semester</SelectItem>
+                <SelectItem value="tahunan">Tahunan</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={selectedClass} onValueChange={setSelectedClass}>
+              <SelectTrigger className="w-40">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Kelas</SelectItem>
+                <SelectItem value="X">Kelas X</SelectItem>
+                <SelectItem value="XI">Kelas XI</SelectItem>
+                <SelectItem value="XII">Kelas XII</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={handleExportReport}>
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            <Button onClick={handleGenerateDetailedReport}>
+              Generate Laporan Detail
+            </Button>
+          </div>
         </div>
 
         {/* Key Metrics */}
@@ -134,6 +216,61 @@ export default function Analytics() {
                     <span>+15% peningkatan dari semester lalu</span>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* New Detailed Analytics Section */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Trend Konseling Harian</CardTitle>
+              <CardDescription>Aktivitas konseling 7 hari terakhir</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map((day, index) => (
+                  <div key={day} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{day}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{ width: `${Math.random() * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {Math.floor(Math.random() * 15) + 5}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Feedback & Evaluasi</CardTitle>
+              <CardDescription>Rating kepuasan siswa</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[5, 4, 3, 2, 1].map((rating) => (
+                  <div key={rating} className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{rating} ⭐</span>
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-yellow-500 h-2 rounded-full" 
+                        style={{ width: `${rating === 5 ? 60 : rating === 4 ? 25 : rating === 3 ? 10 : rating === 2 ? 3 : 2}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {rating === 5 ? '60%' : rating === 4 ? '25%' : rating === 3 ? '10%' : rating === 2 ? '3%' : '2%'}
+                    </span>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

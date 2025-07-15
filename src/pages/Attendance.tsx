@@ -20,6 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { AttendanceFormDialog } from "@/components/attendance/attendance-form-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 const mockAttendanceData = [
   {
@@ -94,12 +96,15 @@ const statusIcons = {
 }
 
 export default function Attendance() {
+  const [attendanceData, setAttendanceData] = useState(mockAttendanceData)
   const [searchTerm, setSearchTerm] = useState("")
   const [classFilter, setClassFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [dateFilter, setDateFilter] = useState("2025-01-15")
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
+  const { toast } = useToast()
 
-  const filteredData = mockAttendanceData.filter(record => {
+  const filteredData = attendanceData.filter(record => {
     const matchesSearch = record.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          record.nis.includes(searchTerm)
     const matchesClass = classFilter === "all" || record.class === classFilter
@@ -109,11 +114,56 @@ export default function Attendance() {
   })
 
   const attendanceStats = {
-    total: mockAttendanceData.length,
-    present: mockAttendanceData.filter(r => r.status === 'present').length,
-    late: mockAttendanceData.filter(r => r.status === 'late').length,
-    absent: mockAttendanceData.filter(r => r.status === 'absent').length,
-    excused: mockAttendanceData.filter(r => r.status === 'excused').length
+    total: attendanceData.length,
+    present: attendanceData.filter(r => r.status === 'present').length,
+    late: attendanceData.filter(r => r.status === 'late').length,
+    absent: attendanceData.filter(r => r.status === 'absent').length,
+    excused: attendanceData.filter(r => r.status === 'excused').length
+  }
+
+  const handleExportData = () => {
+    const csvContent = [
+      ['NIS', 'Nama Siswa', 'Kelas', 'Tanggal', 'Status', 'Jam Masuk', 'Jam Keluar', 'Keterangan'],
+      ...filteredData.map(record => [
+        record.nis,
+        record.student,
+        record.class,
+        record.date,
+        record.status,
+        record.time_in,
+        record.time_out,
+        record.notes
+      ])
+    ].map(row => row.join(',')).join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `absensi_${dateFilter}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    toast({
+      title: "Berhasil",
+      description: "Data absensi berhasil diexport"
+    })
+  }
+
+  const handleSaveAttendance = (newData: any) => {
+    const newRecord = {
+      id: attendanceData.length + 1,
+      student: newData.student,
+      nis: newData.nis,
+      class: newData.class,
+      date: newData.date,
+      status: newData.status,
+      time_in: newData.time_in || "-",
+      time_out: newData.time_out || "-",
+      notes: newData.notes || ""
+    }
+    
+    setAttendanceData([...attendanceData, newRecord])
   }
 
   return (
@@ -127,11 +177,11 @@ export default function Attendance() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExportData}>
               <Download className="mr-2 h-4 w-4" />
               Export Data
             </Button>
-            <Button>
+            <Button onClick={() => setIsFormDialogOpen(true)}>
               Input Absensi Manual
             </Button>
           </div>
@@ -300,6 +350,12 @@ export default function Attendance() {
             )}
           </CardContent>
         </Card>
+
+        <AttendanceFormDialog
+          open={isFormDialogOpen}
+          onOpenChange={setIsFormDialogOpen}
+          onSave={handleSaveAttendance}
+        />
       </div>
     </DashboardLayout>
   )

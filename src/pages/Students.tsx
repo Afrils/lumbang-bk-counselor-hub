@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { Plus, Search, Filter, Download, Edit, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -9,11 +10,26 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
+import { StudentFormDialog } from '@/components/students/student-form-dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 function StudentsContent() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
+  const [editingStudent, setEditingStudent] = useState(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [studentToDelete, setStudentToDelete] = useState(null)
   const { user, profile } = useAuth()
   const { toast } = useToast()
 
@@ -40,6 +56,93 @@ function StudentsContent() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSaveStudent = async (studentData: any) => {
+    try {
+      if (editingStudent) {
+        const { error } = await supabase
+          .from('students')
+          .update(studentData)
+          .eq('id', editingStudent.id)
+        
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('students')
+          .insert([{ ...studentData, user_id: user?.id }])
+        
+        if (error) throw error
+      }
+      
+      fetchStudents()
+      setEditingStudent(null)
+    } catch (error) {
+      console.error('Error saving student:', error)
+      toast({
+        title: 'Error',
+        description: 'Gagal menyimpan data siswa',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleDeleteStudent = async () => {
+    if (!studentToDelete) return
+
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentToDelete.id)
+
+      if (error) throw error
+
+      setStudents(students.filter(s => s.id !== studentToDelete.id))
+      toast({
+        title: 'Berhasil',
+        description: 'Siswa berhasil dihapus'
+      })
+    } catch (error) {
+      console.error('Error deleting student:', error)
+      toast({
+        title: 'Error',
+        description: 'Gagal menghapus siswa',
+        variant: 'destructive'
+      })
+    } finally {
+      setDeleteDialogOpen(false)
+      setStudentToDelete(null)
+    }
+  }
+
+  const handleExportData = () => {
+    const csvContent = [
+      ['NIS', 'Nama', 'Kelas', 'Jenis Kelamin', 'Tanggal Lahir', 'Alamat', 'Nama Wali', 'No. Telepon Wali'],
+      ...filteredStudents.map(student => [
+        student.nis,
+        student.full_name,
+        student.class_name,
+        student.gender === 'L' ? 'Laki-laki' : 'Perempuan',
+        student.birth_date || '',
+        student.address || '',
+        student.parent_name || '',
+        student.parent_phone || ''
+      ])
+    ].map(row => row.join(',')).join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'data_siswa.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+
+    toast({
+      title: "Berhasil",
+      description: "Data siswa berhasil diexport"
+    })
   }
 
   const filteredStudents = students.filter(student => 
@@ -99,11 +202,11 @@ function StudentsContent() {
         
         {(profile?.role === 'admin' || profile?.role === 'guru_bk') && (
           <div className="flex gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExportData}>
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button>
+            <Button onClick={() => setIsFormDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Tambah Siswa
             </Button>
@@ -211,10 +314,24 @@ function StudentsContent() {
                       {(profile?.role === 'admin' || profile?.role === 'guru_bk') && (
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setEditingStudent(student)
+                                setIsFormDialogOpen(true)
+                              }}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setStudentToDelete(student)
+                                setDeleteDialogOpen(true)
+                              }}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -228,6 +345,34 @@ function StudentsContent() {
           </div>
         </CardContent>
       </Card>
+
+      <StudentFormDialog
+        open={isFormDialogOpen}
+        onOpenChange={(open) => {
+          setIsFormDialogOpen(open)
+          if (!open) setEditingStudent(null)
+        }}
+        onSave={handleSaveStudent}
+        student={editingStudent}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Siswa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus siswa {studentToDelete?.full_name}? 
+              Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteStudent}>
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
