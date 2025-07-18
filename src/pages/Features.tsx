@@ -18,7 +18,7 @@ export default function Features() {
             </p>
           </div>
           <div className="flex gap-2">
-            <HelpDialog>
+            <HelpDialog title="Panduan Lengkap">
               <Button variant="outline">
                 <HelpCircle className="h-4 w-4 mr-2" />
                 Panduan Lengkap

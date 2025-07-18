@@ -22,8 +22,15 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Camera
+  Camera,
+  UserPlus,
+  Users
 } from "lucide-react"
+import { AddStudentDialog } from "@/components/admin/add-student-dialog"
+import { AddCounselorDialog } from "@/components/admin/add-counselor-dialog"
+import { HelpDialog } from "@/components/ui/help-dialog"
+import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/hooks/use-toast'
 import {
   Select,
   SelectContent,
@@ -50,9 +57,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { useToast } from "@/hooks/use-toast"
-
 export default function Settings() {
+  const { profile } = useAuth()
+  const { toast } = useToast()
+  const [addStudentDialogOpen, setAddStudentDialogOpen] = useState(false)
+  const [addCounselorDialogOpen, setAddCounselorDialogOpen] = useState(false)
+  
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
@@ -104,8 +114,6 @@ export default function Settings() {
       isCurrent: false
     }
   ])
-
-  const { toast } = useToast()
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault()
@@ -219,11 +227,43 @@ export default function Settings() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Pengaturan Sistem</h1>
-          <p className="text-muted-foreground">
-            Kelola pengaturan aplikasi dan preferensi sistem
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Pengaturan Sistem</h1>
+            <p className="text-muted-foreground">
+              Kelola pengaturan aplikasi dan preferensi sistem
+            </p>
+          </div>
+          <HelpDialog title="Pengaturan">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-base mb-2">Pengaturan Sistem</h4>
+                <ul className="space-y-2 text-sm list-disc list-inside">
+                  <li>Admin dapat mengelola semua aspek sistem dan akun pengguna</li>
+                  <li>Ubah informasi profil dan password di tab "Profil Pengguna"</li>
+                  <li>Kelola notifikasi sistem di tab "Notifikasi"</li>
+                  <li>Admin dapat membuat akun siswa dan konselor baru</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-base mb-2">Manajemen Admin</h4>
+                <ul className="space-y-2 text-sm list-disc list-inside">
+                  <li>Admin memiliki akses penuh untuk semua fitur</li>
+                  <li>Dapat membuat, mengedit, dan menghapus akun pengguna</li>
+                  <li>Dapat mengatur role dan permission pengguna</li>
+                  <li>Dapat mengakses analytics dan laporan lengkap</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-base mb-2">Keamanan</h4>
+                <ul className="space-y-2 text-sm list-disc list-inside">
+                  <li>Sistem otomatis logout setelah 30 menit tidak aktif</li>
+                  <li>Password minimal 6 karakter untuk keamanan</li>
+                  <li>Data pengguna dienkripsi dengan standar tinggi</li>
+                </ul>
+              </div>
+            </div>
+          </HelpDialog>
         </div>
 
         <div className="grid gap-6">
@@ -743,7 +783,69 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+          {/* Admin User Management */}
+          {profile?.role === 'admin' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Manajemen Pengguna
+                </CardTitle>
+                <CardDescription>
+                  Kelola akun siswa dan konselor (Khusus Admin)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button 
+                    onClick={() => setAddStudentDialogOpen(true)}
+                    className="w-full"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Tambah Akun Siswa
+                  </Button>
+                  <Button 
+                    onClick={() => setAddCounselorDialogOpen(true)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Tambah Akun Konselor
+                  </Button>
+                </div>
+                <div className="mt-4 p-4 bg-muted rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Catatan:</strong> Hanya admin (andikabgs@gmail.com) yang dapat membuat dan mengelola akun pengguna.
+                    Fitur ini memberikan akses penuh untuk administrasi sistem.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
+
+        {/* Dialogs */}
+        <AddStudentDialog
+          open={addStudentDialogOpen}
+          onOpenChange={setAddStudentDialogOpen}
+          onSuccess={() => {
+            toast({
+              title: "Berhasil",
+              description: "Akun siswa berhasil dibuat",
+            })
+          }}
+        />
+
+        <AddCounselorDialog
+          open={addCounselorDialogOpen}
+          onOpenChange={setAddCounselorDialogOpen}
+          onSuccess={() => {
+            toast({
+              title: "Berhasil", 
+              description: "Akun konselor berhasil dibuat",
+            })
+          }}
+        />
       </div>
     </DashboardLayout>
   )

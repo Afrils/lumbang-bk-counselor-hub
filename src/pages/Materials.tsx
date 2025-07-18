@@ -26,6 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { HelpDialog } from "@/components/ui/help-dialog"
+import { AddMaterialDialog } from "@/components/materials/add-material-dialog"
 
 function MaterialsContent() {
   const [materials, setMaterials] = useState([])
@@ -179,95 +181,51 @@ function MaterialsContent() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Materi BK</h1>
-          <p className="text-muted-foreground">
-            Koleksi materi bimbingan dan konseling
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Materi BK</h1>
+            <p className="text-muted-foreground">
+              Koleksi materi bimbingan dan konseling
+            </p>
+          </div>
+          <HelpDialog title="Materi BK">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-base mb-2">Cara Menggunakan Fitur Materi BK</h4>
+                <ul className="space-y-2 text-sm list-disc list-inside">
+                  <li>Admin dan guru BK dapat menambah, mengedit, dan menghapus materi</li>
+                  <li>Siswa dapat melihat materi yang telah dipublikasikan</li>
+                  <li>Gunakan fitur pencarian untuk menemukan materi tertentu</li>
+                  <li>Filter berdasarkan kategori untuk akses yang lebih mudah</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-base mb-2">Kategori Materi</h4>
+                <ul className="space-y-1 text-sm">
+                  <li><strong>Akademik:</strong> Materi bimbingan belajar dan metode pembelajaran</li>
+                  <li><strong>Karir:</strong> Panduan pemilihan jurusan dan perencanaan karir</li>
+                  <li><strong>Personal:</strong> Pengembangan diri dan kesehatan mental</li>
+                  <li><strong>Sosial:</strong> Keterampilan interpersonal dan kehidupan sosial</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-base mb-2">Tips untuk Guru BK</h4>
+                <ul className="space-y-2 text-sm list-disc list-inside">
+                  <li>Pastikan materi sesuai dengan target kelas yang dipilih</li>
+                  <li>Gunakan konten yang mudah dipahami siswa</li>
+                  <li>Publikasikan materi setelah review menyeluruh</li>
+                  <li>Update materi secara berkala sesuai kebutuhan</li>
+                </ul>
+              </div>
+            </div>
+          </HelpDialog>
         </div>
         
         {(profile?.role === 'admin' || profile?.role === 'guru_bk') && (
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Tambah Materi
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px]">
-              <DialogHeader>
-                <DialogTitle>Tambah Materi BK Baru</DialogTitle>
-                <DialogDescription>
-                  Buat materi bimbingan dan konseling baru untuk siswa
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Judul Materi</Label>
-                  <Input placeholder="Masukkan judul materi..." />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Deskripsi</Label>
-                  <Textarea placeholder="Jelaskan isi dan tujuan materi..." />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="category">Kategori</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih kategori" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="academic">Akademik</SelectItem>
-                      <SelectItem value="career">Karir</SelectItem>
-                      <SelectItem value="personal">Personal</SelectItem>
-                      <SelectItem value="social">Sosial</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="target_class">Target Kelas</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" />
-                      <span className="text-sm">Kelas X</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" />
-                      <span className="text-sm">Kelas XI</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" />
-                      <span className="text-sm">Kelas XII</span>
-                    </label>
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="content">Konten Materi</Label>
-                  <Textarea 
-                    placeholder="Masukkan konten lengkap materi..."
-                    className="min-h-[100px]"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="file">File Lampiran (Opsional)</Label>
-                  <div className="flex gap-2">
-                    <Input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" />
-                    <Button variant="outline" size="sm">
-                      <Upload className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Batal
-                </Button>
-                <Button onClick={handleCreateMaterial}>
-                  Tambah Materi
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Tambah Materi
+          </Button>
         )}
       </div>
 

@@ -143,8 +143,10 @@ export default function Home() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg">
-                  Pelajari Lebih Lanjut
+                <Button variant="outline" size="lg" asChild>
+                  <Link to="/features">
+                    Pelajari Lebih Lanjut
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -177,21 +179,41 @@ export default function Home() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, index) => (
-              <Card key={index} className="group hover:shadow-elegant transition-all duration-300 hover:-translate-y-1">
-                <CardHeader>
-                  <div className={`w-12 h-12 rounded-lg ${service.color} flex items-center justify-center mb-4`}>
-                    <service.icon className="h-6 w-6 text-white" />
-                  </div>
-                  <CardTitle className="text-xl">{service.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">
-                    {service.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+            {services.map((service, index) => {
+              const getServiceRoute = (title: string) => {
+                switch(title) {
+                  case "Konseling Individual": return "/counseling/individual"
+                  case "Konseling Kelompok": return "/counseling/group"
+                  case "Bimbingan Belajar": return "/counseling/academic"
+                  case "Minat & Bakat": return "/counseling/talent"
+                  case "Bimbingan Karir": return "/counseling/career"
+                  case "Materi BK": return "/materials"
+                  default: return "/auth"
+                }
+              }
+
+              return (
+                <Card key={index} className="group hover:shadow-elegant transition-all duration-300 hover:-translate-y-1">
+                  <CardHeader>
+                    <div className={`w-12 h-12 rounded-lg ${service.color} flex items-center justify-center mb-4`}>
+                      <service.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <CardTitle className="text-xl">{service.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <CardDescription className="text-base">
+                      {service.description}
+                    </CardDescription>
+                    <Button variant="outline" size="sm" asChild className="w-full">
+                      <Link to={getServiceRoute(service.title)}>
+                        Akses Layanan
+                        <ArrowRight className="ml-2 h-3 w-3" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </div>
       </section>

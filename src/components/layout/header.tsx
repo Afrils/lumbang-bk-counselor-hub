@@ -66,7 +66,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         {/* Right side */}
         <div className="flex items-center gap-2">
           {/* Help Button */}
-          <HelpDialog>
+          <HelpDialog title="Sistem BK">
             <Button variant="ghost" size="sm">
               <HelpCircle className="h-4 w-4" />
             </Button>
