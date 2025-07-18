@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { StudentFormDialog } from '@/components/students/student-form-dialog'
+import { AddStudentDialog } from '@/components/admin/add-student-dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,7 @@ function StudentsContent() {
   const [editingStudent, setEditingStudent] = useState(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [studentToDelete, setStudentToDelete] = useState(null)
+  const [showAddStudentDialog, setShowAddStudentDialog] = useState(false)
   const { user, profile } = useAuth()
   const { toast } = useToast()
 
@@ -206,10 +208,16 @@ function StudentsContent() {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button onClick={() => setIsFormDialogOpen(true)}>
+            <Button variant="outline" onClick={() => setIsFormDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Tambah Siswa
+              Tambah Data Siswa
             </Button>
+            {profile?.role === 'admin' && (
+              <Button onClick={() => setShowAddStudentDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Tambah Siswa & Akun
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -354,6 +362,12 @@ function StudentsContent() {
         }}
         onSave={handleSaveStudent}
         student={editingStudent}
+      />
+
+      <AddStudentDialog
+        open={showAddStudentDialog}
+        onOpenChange={setShowAddStudentDialog}
+        onSuccess={fetchStudents}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

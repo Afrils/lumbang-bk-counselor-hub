@@ -55,9 +55,10 @@ export function Header({ onMenuClick }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </Button>
           
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex items-center gap-3">
+            <img src="/logo-smanilum.png" alt="SMAN 1 Lumbang" className="h-8 w-8" />
             <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Sistem BK Digital
+              SMAN 1 Lumbang - Sistem BK
             </h1>
           </div>
         </div>
